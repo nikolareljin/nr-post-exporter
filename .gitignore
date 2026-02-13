@@ -53,3 +53,5 @@ wp-config.php
 
 # Local test artifacts
 /test/tmp/
+
+/ignore/
