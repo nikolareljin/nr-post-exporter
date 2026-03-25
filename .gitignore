@@ -55,3 +55,7 @@ wp-config.php
 /test/tmp/
 
 /ignore/
+
+# Ignore Claude memory files outside the repo root
+CLAUDE.md
+!/CLAUDE.md
