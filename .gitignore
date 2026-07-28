@@ -59,3 +59,6 @@ wp-config.php
 # Ignore Claude memory files outside the repo root
 CLAUDE.md
 !/CLAUDE.md
+
+# Local spec/scratch artifacts
+docs/superpowers/

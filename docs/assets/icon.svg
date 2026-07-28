@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="NR Plugin Workflow">
+  <defs>
+    <linearGradient id="shield-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-5%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000033"/>
+    </filter>
+  </defs>
+
+  <!-- Shield body -->
+  <path
+    d="M64 8 L108 24 L108 60 C108 86 88 106 64 120 C40 106 20 86 20 60 L20 24 Z"
+    fill="url(#shield-grad)"
+    filter="url(#shadow)"
+  />
+
+  <!-- Shine overlay -->
+  <path
+    d="M64 8 L108 24 L108 60 C108 86 88 106 64 120 C40 106 20 86 20 60 L20 24 Z"
+    fill="url(#shine)"
+  />
+
+  <!-- Subtle inner border -->
+  <path
+    d="M64 14 L103 28 L103 60 C103 83 85 102 64 115 C43 102 25 83 25 60 L25 28 Z"
+    fill="none"
+    stroke="#ffffff"
+    stroke-opacity="0.15"
+    stroke-width="1"
+  />
+
+  <!-- NR letters -->
+  <text
+    x="64"
+    y="80"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="44"
+    font-weight="700"
+    fill="#ffffff"
+    text-anchor="middle"
+    letter-spacing="-1"
+  >NR</text>
+</svg>

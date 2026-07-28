@@ -5,7 +5,7 @@
  * Description:       Export and import individual WordPress posts (with meta, terms, and revisions).
  * Author:            Nikola Reljin
  * Author URI:        https://profiles.wordpress.org/nikolareljin/
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 5.8
  * Tested up to:      6.9
  * Requires PHP:      7.4

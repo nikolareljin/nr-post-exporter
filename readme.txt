@@ -4,7 +4,7 @@ Donate link: https://profiles.wordpress.org/nikolareljin/
 Tags: export, import, posts, revisions
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -64,11 +64,17 @@ Imported posts are prefixed with "Imported:" to make them easier to spot.
 
 == Changelog ==
 
+= 1.0.1 =
+* Documentation only. Added a project site with export/import walkthroughs, the JSON payload structure, install steps, and FAQ. No change to plugin behaviour.
+
 = 1.0.0 =
 * Initial release. Extracted from an internal toolkit and packaged as a standalone plugin.
 
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Documentation update only. Nothing changes in the plugin itself.
 
 = 1.0.0 =
 Initial release.
