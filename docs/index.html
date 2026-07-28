@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NR Post Exporter — move one WordPress post, with everything attached</title>
+<meta name="description" content="A WordPress plugin that exports a single post to JSON — meta, taxonomy terms, and full revision history — and imports it on another site.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<meta property="og:title" content="NR Post Exporter">
+<meta property="og:description" content="Export one WordPress post to JSON with its meta, terms, and revisions. Import it on another site.">
+<meta property="og:type" content="website">
+<style>
+:root {
+  --paper: #f7f8fc;
+  --surface: #ffffff;
+  --sunken: #eef1f8;
+  --ink: #0e1729;
+  --ink-soft: #4a5670;
+  --line: #d9dfec;
+  --blue: #2563eb;
+  --deep: #1e3a8a;
+  --amber: #b45309;
+  --amber-bg: #fdf6e8;
+  --mint: #047857;
+  --shadow: 0 1px 2px rgba(14,23,41,.06), 0 12px 28px -18px rgba(14,23,41,.35);
+
+  --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --measure: 68ch;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --max: 74rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0b1020;
+    --surface: #131a2e;
+    --sunken: #0f1526;
+    --ink: #e7ecf7;
+    --ink-soft: #97a3bd;
+    --line: #26304a;
+    --blue: #7ea2ff;
+    --deep: #b9ccff;
+    --amber: #f0b45f;
+    --amber-bg: #241c0d;
+    --mint: #4ade9f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 34px -20px rgba(0,0,0,.8);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: .18em; }
+a:hover { color: var(--deep); }
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+img { max-width: 100%; height: auto; }
+
+code, pre, .mono { font-family: var(--mono); }
+
+.wrap {
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--surface);
+  color: var(--ink);
+  padding: .6rem 1rem;
+  z-index: 20;
+}
+.skip:focus { left: 1rem; top: 1rem; }
+
+/* ---------- eyebrow / labels ---------- */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: .72rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 .75rem;
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar .wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 60px;
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.brand img { width: 26px; height: 26px; }
+.version-pill {
+  font-family: var(--mono);
+  font-size: .74rem;
+  padding: .15rem .5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-soft);
+}
+.topnav {
+  margin-left: auto;
+  display: flex;
+  gap: 1.1rem;
+  font-size: .9rem;
+}
+.topnav a { color: var(--ink-soft); text-decoration: none; }
+.topnav a:hover { color: var(--ink); text-decoration: underline; }
+@media (max-width: 640px) { .topnav { display: none; } }
+
+/* ---------- hero ---------- */
+.hero { padding: clamp(3rem, 8vw, 6rem) 0 clamp(2.5rem, 6vw, 4.5rem); }
+.hero .wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+@media (max-width: 900px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+h1 {
+  font-family: var(--mono);
+  font-size: clamp(2rem, 5.2vw, 3.1rem);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+h1 .accent { color: var(--blue); }
+
+.lede {
+  font-size: clamp(1.05rem, 1.9vw, 1.2rem);
+  color: var(--ink-soft);
+  max-width: 42ch;
+  margin: 0 0 1.75rem;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-family: var(--mono);
+  font-size: .9rem;
+  padding: .6rem 1.1rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--surface);
+}
+.btn:hover { border-color: var(--blue); color: var(--ink); }
+.btn-primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+@media (prefers-color-scheme: dark) { .btn-primary { color: #0b1020; font-weight: 600; } }
+.btn-primary:hover { background: var(--deep); border-color: var(--deep); color: #fff; }
+@media (prefers-color-scheme: dark) { .btn-primary:hover { color: #0b1020; } }
+
+.hero-meta {
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- specimen (signature element) ---------- */
+.specimen {
+  position: relative;
+  isolation: isolate;
+}
+.specimen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate(10px, 10px);
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  z-index: -1;
+  transition: transform .35s ease;
+}
+.specimen:hover::before { transform: translate(18px, 18px); }
+@media (prefers-reduced-motion: reduce) { .specimen::before, .specimen:hover::before { transition: none; transform: translate(10px, 10px); } }
+
+.specimen-sheet {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.specimen-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .7rem 1rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: .75rem;
+  color: var(--ink-soft);
+  background: var(--sunken);
+}
+.specimen-head strong { color: var(--ink); font-weight: 600; }
+
+.spec-group {
+  display: grid;
+  grid-template-columns: 12ch minmax(0, 1fr);
+  gap: 1rem;
+  padding: .85rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.spec-group:last-child { border-bottom: 0; }
+.spec-label {
+  font-family: var(--mono);
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--blue);
+  padding-left: .6rem;
+  align-self: start;
+  line-height: 1.35;
+}
+.spec-group pre {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: var(--ink);
+}
+.tok-key { color: var(--deep); }
+.tok-str { color: var(--mint); }
+.tok-punc { color: var(--ink-soft); }
+.tok-note { color: var(--ink-soft); font-style: italic; }
+
+@media (max-width: 560px) {
+  .spec-group { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+}
+
+/* ---------- generic sections ---------- */
+section { padding: clamp(2.75rem, 6vw, 4.5rem) 0; border-top: 1px solid var(--line); }
+h2 {
+  font-family: var(--mono);
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  letter-spacing: -.02em;
+  font-weight: 600;
+  margin: 0 0 .6rem;
+}
+h3 {
+  font-family: var(--mono);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  margin: 0 0 .4rem;
+}
+.section-lede { color: var(--ink-soft); max-width: var(--measure); margin: 0 0 2rem; }
+
+/* ---------- payload table ---------- */
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 1.25rem;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+}
+.panel h3 { display: flex; align-items: center; gap: .5rem; }
+.panel ul { margin: .75rem 0 0; padding-left: 1.1rem; }
+.panel li { margin-bottom: .4rem; }
+.panel li::marker { color: var(--ink-soft); }
+.mark-yes { color: var(--mint); }
+.mark-no { color: var(--amber); }
+
+/* ---------- steps ---------- */
+.steps { display: grid; gap: 1.25rem; }
+.step {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 30ch) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+}
+@media (max-width: 780px) { .step { grid-template-columns: 3ch minmax(0, 1fr); } .step figure { grid-column: 1 / -1; } }
+.step-n {
+  font-family: var(--mono);
+  font-size: .95rem;
+  color: var(--blue);
+  font-weight: 600;
+}
+.step p { margin: 0; color: var(--ink-soft); }
+.step figure { margin: 0; }
+.step figure img {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: block;
+  background: var(--sunken);
+}
+.step figcaption {
+  font-family: var(--mono);
+  font-size: .7rem;
+  color: var(--ink-soft);
+  margin-top: .5rem;
+}
+
+/* ---------- callout ---------- */
+.callout {
+  background: var(--amber-bg);
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--line));
+  border-left: 3px solid var(--amber);
+  border-radius: 8px;
+  padding: 1.25rem 1.4rem;
+  max-width: var(--measure);
+}
+.callout h3 { color: var(--amber); }
+.callout ul { margin: .75rem 0 0; padding-left: 1.1rem; }
+.callout li { margin-bottom: .4rem; }
+
+/* ---------- code blocks ---------- */
+pre.block {
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: .9rem 1.1rem;
+  font-size: .82rem;
+  line-height: 1.75;
+  margin: .75rem 0 0;
+  /* Commands wrap rather than scroll, so nothing hides off the right edge
+     or slides under the copy button. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- copy buttons (added by script, so no dead button without JS) ---------- */
+.codeblock { position: relative; margin: .75rem 0 0; }
+.codeblock pre.block { margin: 0; padding-top: 2.5rem; }
+.copy-btn {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  font-family: var(--mono);
+  font-size: .7rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .3rem .6rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.copy-btn:hover { border-color: var(--blue); color: var(--blue); }
+.copy-btn[data-state="done"] { border-color: var(--mint); color: var(--mint); }
+.copy-btn[data-state="failed"] { border-color: var(--amber); color: var(--amber); }
+
+/* ---------- requirements ---------- */
+.reqs {
+  font-family: var(--mono);
+  font-size: .85rem;
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 34rem;
+}
+.reqs th, .reqs td {
+  text-align: left;
+  padding: .55rem .75rem;
+  border-bottom: 1px solid var(--line);
+}
+.reqs th { font-weight: 500; color: var(--ink-soft); }
+
+/* ---------- faq ---------- */
+.faq { max-width: var(--measure); }
+.faq details {
+  border-bottom: 1px solid var(--line);
+  padding: .9rem 0;
+}
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  gap: .75rem;
+  align-items: baseline;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::before {
+  content: "+";
+  font-family: var(--mono);
+  color: var(--blue);
+  flex: none;
+}
+.faq details[open] summary::before { content: "\2212"; }
+.faq details p { margin: .6rem 0 0 1.65rem; color: var(--ink-soft); }
+
+/* ---------- changelog ---------- */
+.changelog { max-width: var(--measure); }
+.release { padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
+.release:last-child { border-bottom: 0; }
+.release h3 { display: flex; align-items: baseline; gap: .75rem; margin-bottom: .5rem; }
+.release time { font-family: var(--mono); font-size: .78rem; color: var(--ink-soft); font-weight: 400; }
+.release h4 {
+  font-family: var(--mono);
+  font-size: .7rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: .8rem 0 .3rem;
+}
+.release ul { margin: 0; padding-left: 1.1rem; }
+.release li { margin-bottom: .3rem; color: var(--ink-soft); }
+
+/* ---------- footer ---------- */
+footer {
+  border-top: 1px solid var(--line);
+  padding: 2.5rem 0 3.5rem;
+  font-size: .88rem;
+  color: var(--ink-soft);
+}
+footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: baseline; }
+footer nav { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <img src="assets/icon.svg" alt="" width="26" height="26">
+      NR Post Exporter
+    </a>
+    <span class="version-pill">v<!-- BEGIN:VERSION -->1.0.1<!-- END:VERSION --></span>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#export">Export</a>
+      <a href="#import">Import</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+      <a href="#changelog">Changelog</a>
+    </nav>
+  </div>
+</div>
+
+<main id="main">
+
+<div class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">WordPress plugin</p>
+      <h1>Move one post. <span class="accent">Bring everything with it.</span></h1>
+      <p class="lede">
+        Export a single post or page to JSON — custom fields, taxonomy terms, and the
+        full revision history — then import it on another site.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#install">Install the plugin</a>
+        <a class="btn" href="https://github.com/nikolareljin/nr-post-exporter">View on GitHub</a>
+      </div>
+      <ul class="hero-meta">
+        <li>WordPress 5.8+</li>
+        <li>PHP 7.4+</li>
+        <li>MIT licensed</li>
+        <li>No settings screen</li>
+      </ul>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen-sheet">
+        <div class="specimen-head">
+          <span><strong>post-482-.2026-07-28--14-02-11.json</strong></span>
+          <span>the file you get</span>
+        </div>
+
+        <div class="spec-group">
+          <span class="spec-label">Core fields</span>
+<pre><span class="tok-punc">{</span>
+  <span class="tok-key">"post_title"</span><span class="tok-punc">:</span> <span class="tok-str">"Spring release notes"</span><span class="tok-punc">,</span>
+  <span class="tok-key">"post_type"</span><span class="tok-punc">:</span> <span class="tok-str">"post"</span><span class="tok-punc">,</span>
+  <span class="tok-key">"post_status"</span><span class="tok-punc">:</span> <span class="tok-str">"publish"</span><span class="tok-punc">,</span>
+  <span class="tok-key">"post_name"</span><span class="tok-punc">:</span> <span class="tok-str">"spring-release-notes"</span><span class="tok-punc">,</span>
+  <span class="tok-key">"post_content"</span><span class="tok-punc">:</span> <span class="tok-str">"&lt;!-- wp:paragraph --&gt;&hellip;"</span><span class="tok-punc">,</span></pre>
+        </div>
+
+        <div class="spec-group">
+          <span class="spec-label">Custom fields</span>
+<pre>  <span class="tok-key">"post_meta"</span><span class="tok-punc">: {</span>
+    <span class="tok-key">"_thumbnail_id"</span><span class="tok-punc">:</span> <span class="tok-str">"1184"</span><span class="tok-punc">,</span>
+    <span class="tok-key">"reading_time"</span><span class="tok-punc">:</span> <span class="tok-str">"6"</span>
+  <span class="tok-punc">},</span></pre>
+        </div>
+
+        <div class="spec-group">
+          <span class="spec-label">Terms, by slug</span>
+<pre>  <span class="tok-key">"terms"</span><span class="tok-punc">: {</span>
+    <span class="tok-key">"category"</span><span class="tok-punc">: [</span><span class="tok-str">"announcements"</span><span class="tok-punc">],</span>
+    <span class="tok-key">"post_tag"</span><span class="tok-punc">: [</span><span class="tok-str">"release"</span><span class="tok-punc">,</span> <span class="tok-str">"changelog"</span><span class="tok-punc">]</span>
+  <span class="tok-punc">},</span></pre>
+        </div>
+
+        <div class="spec-group">
+          <span class="spec-label">Every revision</span>
+<pre>  <span class="tok-key">"revisions"</span><span class="tok-punc">: [</span>
+    <span class="tok-punc">{</span> <span class="tok-note">/* oldest draft, same shape */</span> <span class="tok-punc">},</span>
+    <span class="tok-punc">{</span> <span class="tok-note">/* &hellip; replayed in order on import */</span> <span class="tok-punc">}</span>
+  <span class="tok-punc">]</span>
+<span class="tok-punc">}</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="payload">
+  <div class="wrap">
+    <p class="eyebrow">The payload</p>
+    <h2>What travels, and what stays behind</h2>
+    <p class="section-lede">
+      The export is a plain JSON file. Read it, diff it, keep it in a ticket — it is
+      the whole record of the post at the moment you exported it.
+    </p>
+    <div class="split">
+      <div class="panel">
+        <h3><span class="mark-yes" aria-hidden="true">&#10003;</span> Included</h3>
+        <ul>
+          <li>Post fields: title, content, excerpt, status, slug, dates, menu order, parent</li>
+          <li>All custom fields (post meta)</li>
+          <li>Terms for every taxonomy on the post type, referenced by slug</li>
+          <li>The complete revision history, in order</li>
+          <li>Content normalized as UTF-8 so accents survive the round trip</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3><span class="mark-no" aria-hidden="true">&#10007;</span> Not included</h3>
+        <ul>
+          <li>Media files. Attachment references stay in the content and meta, but the files do not move</li>
+          <li>The original author. The person running the import becomes the author</li>
+          <li>Comments</li>
+          <li>Anything larger than about 1&nbsp;MB — that is the import limit</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="export">
+  <div class="wrap">
+    <p class="eyebrow">On the source site</p>
+    <h2>Export a post</h2>
+    <p class="section-lede">
+      No settings to configure. The plugin adds one row action to every public post type.
+      You need the <code>export</code> capability.
+    </p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-n">01</span>
+        <div>
+          <h3>Open Posts or Pages</h3>
+          <p>Custom post types work too, as long as they are public.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-n">02</span>
+        <div>
+          <h3>Hover a row, click Export</h3>
+          <p>The link sits next to Edit and Trash. It opens in a new tab and starts the download.</p>
+        </div>
+        <figure>
+          <img src="https://github.com/user-attachments/assets/d16664cd-3939-4954-bce0-dd38dd947afd"
+               alt="WordPress posts list with the Export row action visible under a post title"
+               width="839" height="666" loading="lazy">
+          <figcaption>The Export action in the post row.</figcaption>
+        </figure>
+      </div>
+      <div class="step">
+        <span class="step-n">03</span>
+        <div>
+          <h3>Save the JSON file</h3>
+          <p>The filename records the post type, ID, site, and export time, so a folder of exports stays readable.</p>
+        </div>
+        <figure>
+          <img src="https://github.com/user-attachments/assets/27b11778-a65f-4409-8665-325e2636fb30"
+               alt="Browser save dialog showing a downloaded JSON export file"
+               width="314" height="173" loading="lazy">
+          <figcaption>The download, named by post type, ID, and timestamp.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="import">
+  <div class="wrap">
+    <p class="eyebrow">On the destination site</p>
+    <h2>Import it somewhere else</h2>
+    <p class="section-lede">
+      Install the plugin on the destination site too, then upload the file.
+      You need the <code>edit_posts</code> capability.
+    </p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-n">01</span>
+        <div>
+          <h3>Go to Tools &rarr; Post Import</h3>
+          <p>One screen, one field.</p>
+        </div>
+        <figure>
+          <img src="https://github.com/user-attachments/assets/15fa276f-e108-49ce-a18e-68e32ec76b5c"
+               alt="The Post Import admin screen with a file field and Import Post button"
+               width="468" height="335" loading="lazy">
+          <figcaption>Tools &rarr; Post Import.</figcaption>
+        </figure>
+      </div>
+      <div class="step">
+        <span class="step-n">02</span>
+        <div>
+          <h3>Choose the exported JSON, then click Import Post</h3>
+          <p>Files are capped at roughly 1&nbsp;MB. Larger exports are rejected rather than truncated.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-n">03</span>
+        <div>
+          <h3>Review the new post</h3>
+          <p>
+            The title is prefixed with <code>Imported:</code> so it is easy to spot. Revisions are
+            replayed oldest to newest, so the history reads the same as it did on the source site.
+            Missing terms are created from their slugs.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="security">
+  <div class="wrap">
+    <p class="eyebrow">Before you share a file</p>
+    <h2>Treat exports as sensitive</h2>
+    <div class="callout">
+      <h3>An export is a full copy of the post record</h3>
+      <ul>
+        <li>Custom fields are exported verbatim. If a plugin stores an API key, a license
+          key, or a private URL in post meta, it lands in the JSON file.</li>
+        <li>Password-protected posts export the <code>post_password</code> field.</li>
+        <li>Draft and private post content is exported the same way published content is.</li>
+      </ul>
+      <p style="margin:.9rem 0 0">
+        Open the file before you attach it to a ticket, commit it, or send it on. Anyone
+        who can read the file can read everything the post held.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <p class="eyebrow">Setup</p>
+    <h2>Install</h2>
+    <p class="section-lede">Install on both sites — the source site for exporting, the destination site for importing.</p>
+    <div class="split">
+      <div class="panel">
+        <h3>From the zip</h3>
+        <p style="color:var(--ink-soft);margin:.5rem 0 0">
+          Download the release zip, then go to Plugins &rarr; Add New &rarr; Upload Plugin, and activate.
+        </p>
+        <p style="margin:.75rem 0 0">
+          <a href="https://github.com/nikolareljin/nr-post-exporter/releases">Releases on GitHub</a>
+        </p>
+      </div>
+      <div class="panel">
+        <h3>With Composer</h3>
+        <pre class="block"><code>composer require nikolareljin/nr-post-exporter</code></pre>
+      </div>
+      <div class="panel">
+        <h3>By hand</h3>
+        <pre class="block"><code>cd wp-content/plugins
+git clone https://github.com/nikolareljin/nr-post-exporter.git
+wp plugin activate nr-post-exporter</code></pre>
+      </div>
+    </div>
+
+    <h3 style="margin-top:2.25rem">Requirements</h3>
+    <table class="reqs">
+      <tbody>
+        <tr><th scope="row">WordPress</th><td>5.8 or newer</td></tr>
+        <tr><th scope="row">PHP</th><td>7.4 or newer</td></tr>
+        <tr><th scope="row">Export capability</th><td><code>export</code></td></tr>
+        <tr><th scope="row">Import capability</th><td><code>edit_posts</code></td></tr>
+        <tr><th scope="row">Current version</th><td><!-- BEGIN:VERSION -->1.0.1<!-- END:VERSION --></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <p class="eyebrow">Details</p>
+    <h2>Questions</h2>
+    <div class="faq">
+      <details>
+        <summary>Does this replace the built-in WordPress export?</summary>
+        <p>No. The native WXR export moves a whole site or a whole post type. This moves one post at a time, and keeps meta and revisions intact while doing it.</p>
+      </details>
+      <details>
+        <summary>Do custom post types work?</summary>
+        <p>Yes, any post type registered as public gets the Export row action.</p>
+      </details>
+      <details>
+        <summary>Why is the imported title prefixed with "Imported:"?</summary>
+        <p>So a fresh import is obvious in the posts list, and so it never silently collides with a post that is already there. Rename it once you have checked it.</p>
+      </details>
+      <details>
+        <summary>What happens to images?</summary>
+        <p>Attachment references travel inside the content and meta, but the files themselves do not. Move the uploads separately, or re-point the references after import.</p>
+      </details>
+      <details>
+        <summary>Who becomes the author?</summary>
+        <p>The user running the import. Post authorship is not carried across, because user IDs rarely match between sites.</p>
+      </details>
+      <details>
+        <summary>Can I import the same file twice?</summary>
+        <p>Yes. Each import creates a new post — nothing is overwritten or matched by ID.</p>
+      </details>
+      <details>
+        <summary>Is there a file size limit?</summary>
+        <p>Imports are capped at about 1&nbsp;MB. Posts with long revision histories are the usual reason to hit it.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="changelog">
+  <div class="wrap">
+    <p class="eyebrow">History</p>
+    <h2>Changelog</h2>
+    <p class="section-lede">
+      Generated from <code>CHANGELOG.md</code> by <code>bin/update-docs.sh</code>.
+      Do not edit this section by hand.
+    </p>
+    <div class="changelog">
+<!-- BEGIN:CHANGELOG -->
+      <article class="release">
+        <h3>1.0.1 <time datetime="2026-07-28">2026-07-28</time></h3>
+        <h4>Added</h4>
+        <ul>
+          <li>Project site under <code>docs/</code>, published with GitHub Pages: export and import walkthroughs, the JSON payload structure, install steps, requirements, and FAQ.</li>
+          <li><code>bin/update-docs.sh</code> to sync the site's version and changelog from <code>nr-post-exporter.php</code> and <code>CHANGELOG.md</code>. Run with <code>--check</code> to fail on drift.</li>
+          <li>Copy buttons on the install commands on the project site.</li>
+        </ul>
+        <h4>Changed</h4>
+        <ul>
+          <li>Documentation only. No change to plugin runtime behaviour.</li>
+          <li>Excluded <code>docs/</code> from the distributed plugin package.</li>
+        </ul>
+      </article>
+      <article class="release">
+        <h3>1.0.0 <time datetime="2025-12-22">2025-12-22</time></h3>
+        <h4>Changed</h4>
+        <ul>
+          <li>Set explicit SVN slug/URL for WordPress.org deploys to ensure publishing to the correct repo.</li>
+          <li>Switched WP-CLI install in CI to the official builds phar for reliable POT generation.</li>
+          <li>Excluded the <code>test</code> directory from distributed plugin packages.</li>
+        </ul>
+      </article>
+      <article class="release">
+        <h3>1.0.0-rc.1 <time datetime="2025-10-31">2025-10-31</time></h3>
+        <h4>Updated</h4>
+        <ul>
+          <li>Standardized plugin-specific constants and admin hooks to the <code>nrpexp</code> prefix to avoid collisions.</li>
+          <li>Unified export/import nonces and action slugs under the new prefix for consistency with WordPress guidelines.</li>
+          <li>Updated <code>readme.txt</code> metadata: added contributor <code>nreljin</code>, trimmed tags to five, and shortened the description to WordPress.org limits.</li>
+          <li>Swapped <code>error_log()</code> call for the <code>nrpexp_export_terms_error</code> action to surface term export failures without shipping debug logging.</li>
+        </ul>
+      </article>
+      <article class="release">
+        <h3>0.1.2 <time datetime="2025-12-20">2025-12-20</time></h3>
+        <h4>Updated</h4>
+        <ul>
+          <li>Refined namespaces and linting to align with WordPress review feedback.</li>
+        </ul>
+      </article>
+      <article class="release">
+        <h3>0.1.1 <time datetime="2025-10-20">2025-10-20</time></h3>
+        <h4>Fixed</h4>
+        <ul>
+          <li>Corrected the WordPress.org dist build workflow to deploy cleanly.</li>
+        </ul>
+      </article>
+<!-- END:CHANGELOG -->
+    </div>
+    <p style="margin-top:1.5rem"><a href="https://github.com/nikolareljin/nr-post-exporter/blob/main/CHANGELOG.md">Full changelog on GitHub</a></p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>NR Post Exporter &middot; MIT &middot; by <a href="https://profiles.wordpress.org/nikolareljin/">Nikola Reljin</a></span>
+    <nav aria-label="Project links">
+      <a href="https://github.com/nikolareljin/nr-post-exporter">Source</a>
+      <a href="https://github.com/nikolareljin/nr-post-exporter/issues">Issues</a>
+      <a href="https://github.com/nikolareljin/nr-post-exporter/blob/main/LICENSE">License</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+// Add a copy button to every command block. Done in script so the page never
+// shows a button that cannot work.
+(function () {
+  var blocks = document.querySelectorAll('pre.block');
+  if (!blocks.length) { return; }
+
+  var status = document.createElement('p');
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  status.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap';
+  document.body.appendChild(status);
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // Fallback for pages served over http or opened from disk.
+    return new Promise(function (resolve, reject) {
+      var field = document.createElement('textarea');
+      field.value = text;
+      field.setAttribute('readonly', '');
+      field.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(field);
+      field.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(field);
+      ok ? resolve() : reject(new Error('copy command unavailable'));
+    });
+  }
+
+  Array.prototype.forEach.call(blocks, function (block, i) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'codeblock';
+    block.parentNode.insertBefore(wrapper, block);
+    wrapper.appendChild(block);
+
+    var label = (block.closest('.panel') && block.closest('.panel').querySelector('h3'))
+      ? block.closest('.panel').querySelector('h3').textContent.trim()
+      : 'command ' + (i + 1);
+
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy-btn';
+    button.textContent = 'Copy';
+    button.setAttribute('aria-label', 'Copy the ' + label + ' commands');
+    wrapper.appendChild(button);
+
+    var reset;
+    button.addEventListener('click', function () {
+      var text = (block.dataset.copy || block.textContent).replace(/\s+$/, '');
+      copyText(text).then(function () {
+        button.textContent = 'Copied';
+        button.dataset.state = 'done';
+        status.textContent = label + ' commands copied to the clipboard.';
+      }).catch(function () {
+        button.textContent = 'Select it';
+        button.dataset.state = 'failed';
+        status.textContent = 'Could not reach the clipboard. Select the text and copy it.';
+      }).then(function () {
+        clearTimeout(reset);
+        reset = setTimeout(function () {
+          button.textContent = 'Copy';
+          delete button.dataset.state;
+        }, 2200);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

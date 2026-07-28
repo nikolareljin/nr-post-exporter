@@ -9,6 +9,7 @@
     <exclude-pattern>languages/*</exclude-pattern>
     <exclude-pattern>test/*</exclude-pattern>
     <exclude-pattern>bin/*</exclude-pattern>
+    <exclude-pattern>docs/*</exclude-pattern>
 
     <arg name="basepath" value="."/>
     <arg name="colors"/>

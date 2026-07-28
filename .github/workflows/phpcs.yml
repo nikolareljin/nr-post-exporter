@@ -25,3 +25,6 @@ jobs:
 
       - name: Run PHPCS
         run: vendor/bin/phpcs -p -s -d memory_limit=512M --standard=./phpcs.xml .
+
+      - name: Check project site is in sync
+        run: bash bin/update-docs.sh --check

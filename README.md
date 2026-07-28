@@ -2,6 +2,8 @@
 
 Export and import individual WordPress posts (with meta, terms, and revisions).
 
+**Project site: https://nikolareljin.github.io/nr-post-exporter/**
+
 See `readme.txt` for WordPress.org metadata and screenshots.
 
 ## Features
@@ -75,3 +77,19 @@ See `readme.txt` for WordPress.org metadata and screenshots.
 - Linting: `composer run lint` and `composer run lint:fix`
 - Build zip: `bash bin/build-zip.sh`
 - Test environment: see `test/README.md`
+
+## Project site
+
+The site under `docs/` is published with GitHub Pages (source: `main`, folder `/docs`).
+It is plain HTML with no build step, and it is excluded from the distributed plugin zip
+via `.distignore`.
+
+Two regions of `docs/index.html` are generated — the version badge and the changelog.
+After bumping the version or editing `CHANGELOG.md`, run:
+
+```bash
+bash bin/update-docs.sh          # rewrite the generated regions
+bash bin/update-docs.sh --check  # fail if the page is out of sync (used in CI)
+```
+
+Everything else on the page is hand-authored; edit it directly.
