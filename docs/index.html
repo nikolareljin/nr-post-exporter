@@ -378,10 +378,37 @@ pre.block {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: .9rem 1.1rem;
-  overflow-x: auto;
   font-size: .82rem;
+  line-height: 1.75;
   margin: .75rem 0 0;
+  /* Commands wrap rather than scroll, so nothing hides off the right edge
+     or slides under the copy button. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
+
+/* ---------- copy buttons (added by script, so no dead button without JS) ---------- */
+.codeblock { position: relative; margin: .75rem 0 0; }
+.codeblock pre.block { margin: 0; padding-top: 2.5rem; }
+.copy-btn {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  font-family: var(--mono);
+  font-size: .7rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .3rem .6rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.copy-btn:hover { border-color: var(--blue); color: var(--blue); }
+.copy-btn[data-state="done"] { border-color: var(--mint); color: var(--mint); }
+.copy-btn[data-state="failed"] { border-color: var(--amber); color: var(--amber); }
 
 /* ---------- requirements ---------- */
 .reqs {
@@ -775,6 +802,7 @@ wp plugin activate nr-post-exporter</code></pre>
         <ul>
           <li>Project site under <code>docs/</code>, published with GitHub Pages: export and import walkthroughs, the JSON payload structure, install steps, requirements, and FAQ.</li>
           <li><code>bin/update-docs.sh</code> to sync the site's version and changelog from <code>nr-post-exporter.php</code> and <code>CHANGELOG.md</code>. Run with <code>--check</code> to fail on drift.</li>
+          <li>Copy buttons on the install commands on the project site.</li>
         </ul>
         <h4>Changed</h4>
         <ul>
@@ -833,6 +861,78 @@ wp plugin activate nr-post-exporter</code></pre>
     </nav>
   </div>
 </footer>
+
+<script>
+// Add a copy button to every command block. Done in script so the page never
+// shows a button that cannot work.
+(function () {
+  var blocks = document.querySelectorAll('pre.block');
+  if (!blocks.length) { return; }
+
+  var status = document.createElement('p');
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  status.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap';
+  document.body.appendChild(status);
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // Fallback for pages served over http or opened from disk.
+    return new Promise(function (resolve, reject) {
+      var field = document.createElement('textarea');
+      field.value = text;
+      field.setAttribute('readonly', '');
+      field.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(field);
+      field.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(field);
+      ok ? resolve() : reject(new Error('copy command unavailable'));
+    });
+  }
+
+  Array.prototype.forEach.call(blocks, function (block, i) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'codeblock';
+    block.parentNode.insertBefore(wrapper, block);
+    wrapper.appendChild(block);
+
+    var label = (block.closest('.panel') && block.closest('.panel').querySelector('h3'))
+      ? block.closest('.panel').querySelector('h3').textContent.trim()
+      : 'command ' + (i + 1);
+
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy-btn';
+    button.textContent = 'Copy';
+    button.setAttribute('aria-label', 'Copy the ' + label + ' commands');
+    wrapper.appendChild(button);
+
+    var reset;
+    button.addEventListener('click', function () {
+      var text = (block.dataset.copy || block.textContent).replace(/\s+$/, '');
+      copyText(text).then(function () {
+        button.textContent = 'Copied';
+        button.dataset.state = 'done';
+        status.textContent = label + ' commands copied to the clipboard.';
+      }).catch(function () {
+        button.textContent = 'Select it';
+        button.dataset.state = 'failed';
+        status.textContent = 'Could not reach the clipboard. Select the text and copy it.';
+      }).then(function () {
+        clearTimeout(reset);
+        reset = setTimeout(function () {
+          button.textContent = 'Copy';
+          delete button.dataset.state;
+        }, 2200);
+      });
+    });
+  });
+})();
+</script>
 
 </body>
 </html>

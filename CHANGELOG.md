@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Project site under `docs/`, published with GitHub Pages: export and import walkthroughs, the JSON payload structure, install steps, requirements, and FAQ.
 - `bin/update-docs.sh` to sync the site's version and changelog from `nr-post-exporter.php` and `CHANGELOG.md`. Run with `--check` to fail on drift.
+- Copy buttons on the install commands on the project site.
 
 ### Changed
 - Documentation only. No change to plugin runtime behaviour.
