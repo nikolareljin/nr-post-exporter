@@ -93,3 +93,10 @@ bash bin/update-docs.sh --check  # fail if the page is out of sync (used in CI)
 ```
 
 Everything else on the page is hand-authored; edit it directly.
+
+
+## Clone traffic
+
+![Clone traffic](https://raw.githubusercontent.com/nikolareljin/stats/main/charts/nr-post-exporter.svg)
+
+_Updated daily. Total and unique cloners over the last 14 days._
