@@ -75,6 +75,15 @@ if $compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' --user='${ADMIN_USER}
   exit 1
 fi
 
+info "Normalizing an internal post status…"
+printf '%s\n' '{"post_type":"post","post_status":"trash","post_title":"Internal status"}' > test/tmp/internal-post-status.json
+STATUS_ID=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' --user='${ADMIN_USER}' eval-file /workspace/wpcli-import.php /workspace/tmp/internal-post-status.json")
+STATUS=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' post get ${STATUS_ID} --field=post_status")
+if [[ "draft" != "${STATUS}" ]]; then
+  err "Internal post status was not normalized to draft"
+  exit 1
+fi
+
 info "Verifying import…"
 TITLE=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' post get ${IMPORTED_ID} --field=post_title")
 CONTENT=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' post get ${IMPORTED_ID} --field=post_content")

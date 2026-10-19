@@ -93,12 +93,12 @@ class Import {
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- post_import verifies the nonce before calling this method.
 		$upload = $_FILES['upload'];
-		if ( UPLOAD_ERR_OK !== (int) ( $upload['error'] ?? UPLOAD_ERR_NO_FILE ) ) {
+		if ( ! isset( $upload['error'] ) || ! is_numeric( $upload['error'] ) || UPLOAD_ERR_OK !== (int) $upload['error'] ) {
 			return new \WP_Error( 'nrpexp_upload_error', __( 'The upload could not be completed. Please try again.', 'nr-post-exporter' ) );
 		}
-		$name = isset( $upload['name'] ) ? sanitize_file_name( wp_unslash( $upload['name'] ) ) : '';
-		$tmp  = $upload['tmp_name'] ?? '';
-		$size = (int) ( $upload['size'] ?? 0 );
+		$name = isset( $upload['name'] ) && is_string( $upload['name'] ) ? sanitize_file_name( wp_unslash( $upload['name'] ) ) : '';
+		$tmp  = isset( $upload['tmp_name'] ) && is_string( $upload['tmp_name'] ) ? $upload['tmp_name'] : '';
+		$size = isset( $upload['size'] ) && is_numeric( $upload['size'] ) ? (int) $upload['size'] : 0;
 		if ( 'json' !== strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) || $size < 1 || self::MAX_UPLOAD_BYTES < $size ) {
 			return new \WP_Error( 'nrpexp_upload_invalid', __( 'Upload a JSON export no larger than 1 MB.', 'nr-post-exporter' ) );
 		}
@@ -201,8 +201,9 @@ class Import {
 		if ( ! current_user_can( $create_cap ) ) {
 			return new \WP_Error( 'nrpexp_create_denied', __( 'You cannot create this post type.', 'nr-post-exporter' ) );
 		}
-		$status = null === $required_status ? $data['post_status'] : $required_status;
-		if ( ! get_post_status_object( $status ) || ( in_array( $status, array( 'publish', 'future' ), true ) && ! current_user_can( $object->cap->publish_posts ) ) || ( 'private' === $status && ! current_user_can( $object->cap->read_private_posts ) ) ) {
+		$status        = null === $required_status ? $data['post_status'] : $required_status;
+		$status_object = get_post_status_object( $status );
+		if ( ! $status_object || ! empty( $status_object->internal ) || ( ! empty( $status_object->public ) && ! current_user_can( $object->cap->publish_posts ) ) || ( 'future' === $status && ! current_user_can( $object->cap->publish_posts ) ) || ( ! empty( $status_object->private ) && ! current_user_can( $object->cap->read_private_posts ) ) ) {
 			$status = 'draft';
 		}
 		$data['post_author']  = (int) $author_id;
