@@ -64,8 +64,9 @@ Imported posts are prefixed with "Imported:" to make them easier to spot.
 2. Import page under Tools menu.
 
 == Changelog ==
-\n= 1.1.0 =
+= 1.1.0 =
 * Added WordPress 7.1 compatibility coverage while retaining WordPress 5.8+ support.
+* Fixed uploaded JSON handling and restored Export actions for custom public post types.
 * Hardened import validation, capabilities, post meta, taxonomy terms, and revision restoration.
 
 
@@ -78,7 +79,7 @@ Imported posts are prefixed with "Imported:" to make them easier to spot.
 
 
 == Upgrade Notice ==
-\n= 1.1.0 =
+= 1.1.0 =
 Security and compatibility update. Existing export JSON files remain supported.
 
 

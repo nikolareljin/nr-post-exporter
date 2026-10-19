@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   composer-audit:
@@ -25,6 +24,9 @@ jobs:
       - run: composer audit --no-interaction
 
   foxguard:
+    permissions:
+      contents: read
+      security-events: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

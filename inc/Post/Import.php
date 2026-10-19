@@ -106,13 +106,13 @@ class Import {
 			return new \WP_Error( 'nrpexp_upload_invalid', __( 'The uploaded file could not be verified.', 'nr-post-exporter' ) );
 		}
 		try {
-			$reader = new SplFileObject( $tmp, 'r' );
+			$reader = new \SplFileObject( $tmp, 'r' );
 			$json   = '';
 			foreach ( $reader as $line ) {
 				$json .= $line;
 			}
-		} catch ( RuntimeException $exception ) {
-			return new WP_Error( 'nrpexp_upload_read', __( 'The uploaded JSON file could not be read.', 'nr-post-exporter' ) );
+		} catch ( \RuntimeException $exception ) {
+			return new \WP_Error( 'nrpexp_upload_read', __( 'The uploaded JSON file could not be read.', 'nr-post-exporter' ) );
 		}
 		if ( false === $json ) {
 			return new \WP_Error( 'nrpexp_upload_read', __( 'The uploaded file could not be read.', 'nr-post-exporter' ) );
@@ -332,7 +332,31 @@ class Import {
 	 * @return bool
 	 */
 	private static function valid_payload( array $payload ) {
-		return ( ! isset( $payload['post_type'] ) || is_string( $payload['post_type'] ) ) && ( ! isset( $payload['revisions'] ) || is_array( $payload['revisions'] ) ) && ( ! isset( $payload['post_meta'] ) || is_array( $payload['post_meta'] ) ) && ( ! isset( $payload['terms'] ) || is_array( $payload['terms'] ) );
+		if ( ! self::valid_post_data( $payload ) || ( isset( $payload['post_meta'] ) && ! is_array( $payload['post_meta'] ) ) || ( isset( $payload['terms'] ) && ! is_array( $payload['terms'] ) ) || ( isset( $payload['revisions'] ) && ! is_array( $payload['revisions'] ) ) ) {
+			return false;
+		}
+		foreach ( $payload['revisions'] ?? array() as $revision ) {
+			if ( ! is_array( $revision ) || ! self::valid_post_data( $revision ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Validates scalar post fields before passing them to WordPress APIs.
+	 *
+	 * @param array $post_data Exported post or revision data.
+	 * @return bool
+	 */
+	private static function valid_post_data( array $post_data ) {
+		$string_fields = array( 'post_content', 'post_title', 'post_excerpt', 'post_status', 'comment_status', 'ping_status', 'post_password', 'post_name', 'to_ping', 'pinged', 'post_type', 'post_mime_type', 'post_date', 'post_date_gmt', 'post_modified', 'post_modified_gmt' );
+		foreach ( $string_fields as $field ) {
+			if ( isset( $post_data[ $field ] ) && ! is_string( $post_data[ $field ] ) ) {
+				return false;
+			}
+		}
+		return ! isset( $post_data['menu_order'] ) || is_numeric( $post_data['menu_order'] );
 	}
 
 	/**
@@ -356,7 +380,7 @@ class Import {
 	 * @return string
 	 */
 	private static function normalize_text( $value ) {
-		return wp_slash( html_entity_decode( wp_unslash( $value ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+		return wp_slash( html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
 	}
 
 	/**

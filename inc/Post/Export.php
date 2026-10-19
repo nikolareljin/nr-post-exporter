@@ -34,8 +34,16 @@ class Export {
 	 * @return void
 	 */
 	public static function add_export_link() {
-		add_filter( 'post_row_actions', array( __CLASS__, 'add_export_link_to_post_row_actions' ), 10, 2 );
-		add_filter( 'page_row_actions', array( __CLASS__, 'add_export_link_to_post_row_actions' ), 10, 2 );
+		$post_types = get_post_types(
+			array(
+				'public'  => true,
+				'show_ui' => true,
+			),
+			'names'
+		);
+		foreach ( $post_types as $post_type ) {
+			add_filter( $post_type . '_row_actions', array( __CLASS__, 'add_export_link_to_post_row_actions' ), 10, 2 );
+		}
 		add_action( 'admin_post_nrpexp_export', array( __CLASS__, 'export_post_link_action' ) );
 	}
 
@@ -125,12 +133,14 @@ class Export {
 		// Current date in format YYYY-mm-dd_HH-ii-ss.
 		$current_date = gmdate( 'Y-m-d--H-i-s' );
 
-		$filename = sprintf(
-			'%s-%s-%s.%s.json',
-			$post->post_type,
-			$post->ID,
-			$site_name,
-			$current_date
+		$filename = sanitize_file_name(
+			sprintf(
+				'%s-%s-%s.%s.json',
+				$post->post_type,
+				$post->ID,
+				$site_name,
+				$current_date
+			)
 		);
 
 		// Use WordPress helper to send JSON with proper headers and exit.
