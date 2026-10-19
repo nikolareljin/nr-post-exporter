@@ -4,6 +4,7 @@
 
     <!-- Files are provided via CLI path. -->
 
+    <exclude-pattern>.build/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
     <exclude-pattern>assets/*</exclude-pattern>
     <exclude-pattern>languages/*</exclude-pattern>

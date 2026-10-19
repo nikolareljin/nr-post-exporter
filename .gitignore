@@ -49,6 +49,7 @@ wp-config.php
 
 # Plugin repository build artifacts
 /.build/
+/dist/
 /build/
 
 # Local test artifacts
