@@ -15,8 +15,8 @@ jobs:
   composer-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea
         with:
           php-version: '8.4'
           tools: composer
@@ -29,8 +29,8 @@ jobs:
       security-events: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: 0sec-labs/foxguard/action@v0.14.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: 0sec-labs/foxguard/action@f20b226a92f783c03a03c1654d10779939e9c9c5
         with:
           path: .
           severity: medium

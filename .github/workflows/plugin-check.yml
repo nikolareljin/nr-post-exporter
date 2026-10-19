@@ -38,7 +38,7 @@ jobs:
           - wp: '7.1'
             php: '8.4'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Run packaged plugin check
         env:
           NRPEX_WORDPRESS_IMAGE: wordpress:${{ matrix.wp }}-php${{ matrix.php }}-apache
@@ -47,7 +47,7 @@ jobs:
         run: grep -Fq 'No errors found.' test/tmp/plugin-check.json
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: plugin-check-wp${{ matrix.wp }}-php${{ matrix.php }}
           path: |
