@@ -151,6 +151,7 @@ code, pre, .mono { font-family: var(--mono); }
 
 /* ---------- hero ---------- */
 .hero { padding: clamp(3rem, 8vw, 6rem) 0 clamp(2.5rem, 6vw, 4.5rem); }
+.hero-mark { display: block; width: clamp(8rem, 16vw, 10.5rem); margin: 0 0 1.25rem; }
 .hero .wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
@@ -504,6 +505,7 @@ footer nav { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-left: auto; }
 <div class="hero" id="top">
   <div class="wrap">
     <div>
+      <img class="hero-mark" src="assets/post-transfer.svg" alt="A post document moving between two sites" width="320" height="220">
       <p class="eyebrow">WordPress plugin</p>
       <h1>Move one post. <span class="accent">Bring everything with it.</span></h1>
       <p class="lede">
