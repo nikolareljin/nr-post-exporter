@@ -18,6 +18,8 @@ jobs:
       versions: >-
         [{"wp":"5.8","php":"7.4"}]
       meta_check_script: /var/www/html/wp-content/plugins/nr-post-exporter/test/wpcli-plugin-meta-check.php
+      exclude_directories: vendor,node_modules,.git,.github,docs,test,tests,__tests__,bin,.idea,.vscode
+      exclude_files: .gitignore,.gitattributes,.editorconfig,.distignore,.foxguard.yml,composer.lock,package.json,package-lock.json,phpcs.xml
       fail_on_findings: false
       upload_artifact: true
       artifact_name: legacy-runtime-results
@@ -30,6 +32,8 @@ jobs:
       versions: >-
         [{"wp":"6.9","php":"8.2"},{"wp":"7.0","php":"8.3"},{"wp":"7.1","php":"8.4"}]
       meta_check_script: /var/www/html/wp-content/plugins/nr-post-exporter/test/wpcli-plugin-meta-check.php
+      exclude_directories: vendor,node_modules,.git,.github,docs,test,tests,__tests__,bin,.idea,.vscode
+      exclude_files: .gitignore,.gitattributes,.editorconfig,.distignore,.foxguard.yml,composer.lock,package.json,package-lock.json,phpcs.xml
       fail_on_findings: true
       upload_artifact: true
       artifact_name: plugin-check-results
