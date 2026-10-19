@@ -16,7 +16,7 @@ See `readme.txt` for WordPress.org metadata and screenshots.
 
 ## Requirements
 
-- WordPress 5.8+
+- WordPress 5.8+ through 7.1
 - PHP 7.4+
 - Export requires the `export` capability.
 - Import requires the `edit_posts` capability.

@@ -487,7 +487,7 @@ footer nav { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-left: auto; }
       <img src="assets/icon.svg" alt="" width="26" height="26">
       NR Post Exporter
     </a>
-    <span class="version-pill">v<!-- BEGIN:VERSION -->1.0.1<!-- END:VERSION --></span>
+    <span class="version-pill">v<!-- BEGIN:VERSION -->1.1.0<!-- END:VERSION --></span>
     <nav class="topnav" aria-label="Sections">
       <a href="#export">Export</a>
       <a href="#import">Import</a>
@@ -744,7 +744,7 @@ wp plugin activate nr-post-exporter</code></pre>
         <tr><th scope="row">PHP</th><td>7.4 or newer</td></tr>
         <tr><th scope="row">Export capability</th><td><code>export</code></td></tr>
         <tr><th scope="row">Import capability</th><td><code>edit_posts</code></td></tr>
-        <tr><th scope="row">Current version</th><td><!-- BEGIN:VERSION -->1.0.1<!-- END:VERSION --></td></tr>
+        <tr><th scope="row">Current version</th><td><!-- BEGIN:VERSION -->1.1.0<!-- END:VERSION --></td></tr>
       </tbody>
     </table>
   </div>
@@ -816,6 +816,15 @@ wp plugin activate nr-post-exporter</code></pre>
     <div class="changelog">
 <!-- BEGIN:CHANGELOG -->
       <article class="release">
+        <h3>1.1.0 <time datetime="2026-10-19">2026-10-19</time></h3>
+        <h4>Changed</h4>
+        <ul>
+          <li>Added WordPress 7.1 compatibility coverage while retaining WordPress 5.8 and PHP 7.4 support.</li>
+          <li>Hardened import and export permissions, upload validation, meta restoration, taxonomy assignment, and revision timestamp updates.</li>
+          <li>Added Composer and Foxguard security checks plus an explicit WordPress and PHP compatibility matrix.</li>
+        </ul>
+      </article>
+      <article class="release">
         <h3>1.0.1 <time datetime="2026-07-28">2026-07-28</time></h3>
         <h4>Added</h4>
         <ul>
@@ -853,13 +862,6 @@ wp plugin activate nr-post-exporter</code></pre>
         <h4>Updated</h4>
         <ul>
           <li>Refined namespaces and linting to align with WordPress review feedback.</li>
-        </ul>
-      </article>
-      <article class="release">
-        <h3>0.1.1 <time datetime="2025-10-20">2025-10-20</time></h3>
-        <h4>Fixed</h4>
-        <ul>
-          <li>Corrected the WordPress.org dist build workflow to deploy cleanly.</li>
         </ul>
       </article>
 <!-- END:CHANGELOG -->

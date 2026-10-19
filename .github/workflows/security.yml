@@ -1,0 +1,36 @@
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  composer-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: composer audit --no-interaction
+
+  foxguard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: 0sec-labs/foxguard/action@v0.14.0
+        with:
+          path: .
+          severity: medium
+          fail-on-findings: 'true'
+          upload-sarif: 'true'

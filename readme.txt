@@ -3,8 +3,8 @@ Contributors: nreljin
 Donate link: https://profiles.wordpress.org/nikolareljin/
 Tags: export, import, posts, revisions
 Requires at least: 5.8
-Tested up to: 6.9
-Stable tag: 1.0.1
+Tested up to: 7.1
+Stable tag: 1.1.0
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -18,10 +18,11 @@ A lightweight tool to move content between WordPress sites with precision.
 Features
 - Export a single post or page to JSON (includes meta, terms, and revisions)
 - Import a previously exported JSON to recreate the post on another site
-- Works with all public post types; sets current user as the author on import
+- Works with available post types the current user can create; sets current user as the author on import
 - Adds an Export action in Posts/Pages list rows
 - Adds Tools → Post Import with a file upload form
 - Robust UTF-8 handling: exports HTML‑entity encode content/meta; imports decode to avoid double‑encoding
+- Applies WordPress capability checks to exported posts, imported meta, terms, statuses, and post types
 
 Perfect for
 - Migrating content between environments
@@ -63,6 +64,11 @@ Imported posts are prefixed with "Imported:" to make them easier to spot.
 2. Import page under Tools menu.
 
 == Changelog ==
+\n= 1.1.0 =
+* Added WordPress 7.1 compatibility coverage while retaining WordPress 5.8+ support.
+* Hardened import validation, capabilities, post meta, taxonomy terms, and revision restoration.
+
+
 
 = 1.0.1 =
 * Documentation only. Added a project site with export/import walkthroughs, the JSON payload structure, install steps, and FAQ. No change to plugin behaviour.
@@ -72,6 +78,10 @@ Imported posts are prefixed with "Imported:" to make them easier to spot.
 
 
 == Upgrade Notice ==
+\n= 1.1.0 =
+Security and compatibility update. Existing export JSON files remain supported.
+
+
 
 = 1.0.1 =
 Documentation update only. Nothing changes in the plugin itself.
