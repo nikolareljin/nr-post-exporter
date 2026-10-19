@@ -8,8 +8,8 @@ compose="docker compose -f test/docker-compose.yml"
 info() { echo "[INFO] $*"; }
 err() { echo "[ERROR] $*" 1>&2; }
 
-ADMIN_USER=admin
-ADMIN_PASS=admin
+ADMIN_USER='admin'
+ADMIN_PASS='admin'
 ADMIN_EMAIL=admin@example.com
 HOST_PORT=${NRPEX_TEST_PORT:-8080}
 BASE_URL="http://localhost:${HOST_PORT}"
