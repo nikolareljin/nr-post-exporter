@@ -68,6 +68,13 @@ info "Importing the JSON into test2…"
 IMPORTED_ID=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' --user='${ADMIN_USER}' eval-file /workspace/wpcli-import.php /workspace/tmp/export.json" < "${EXPORT_PATH_HOST}")
 info "Imported post ID: ${IMPORTED_ID}"
 
+info "Rejecting an internal post type…"
+printf '%s\n' '{"post_type":"revision","post_title":"Internal payload"}' > test/tmp/internal-post-type.json
+if $compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' --user='${ADMIN_USER}' eval-file /workspace/wpcli-import.php /workspace/tmp/internal-post-type.json" >/dev/null 2>&1; then
+  err "Internal post type import was accepted"
+  exit 1
+fi
+
 info "Verifying import…"
 TITLE=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' post get ${IMPORTED_ID} --field=post_title")
 CONTENT=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' post get ${IMPORTED_ID} --field=post_content")

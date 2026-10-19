@@ -176,7 +176,7 @@ class Import {
 		}
 		wp_save_post_revision( $post_id );
 		self::import_meta( $post_id, $payload['post_meta'] ?? array() );
-		self::import_terms( $post_id, $payload['terms'] ?? array() );
+		self::import_terms( $post_id, $post_data['post_type'], $payload['terms'] ?? array() );
 		return (int) $post_id;
 	}
 
@@ -194,7 +194,7 @@ class Import {
 		$type   = null === $required_type ? $data['post_type'] : $required_type;
 		$type   = $type ? $type : 'post';
 		$object = get_post_type_object( $type );
-		if ( ! $object ) {
+		if ( ! $object || empty( $object->public ) || empty( $object->show_ui ) ) {
 			return new \WP_Error( 'nrpexp_post_type', __( 'The post type in this export is not available on this site.', 'nr-post-exporter' ) );
 		}
 		$create_cap = ! empty( $object->cap->create_posts ) ? $object->cap->create_posts : $object->cap->edit_posts;
@@ -237,17 +237,18 @@ class Import {
 	/**
 	 * Imports terms only when the current user has assignment and creation permission.
 	 *
-	 * @param int   $post_id Post ID.
-	 * @param mixed $terms Exported terms.
+	 * @param int    $post_id Post ID.
+	 * @param string $post_type Imported post type.
+	 * @param mixed  $terms Exported terms.
 	 * @return void
 	 */
-	private static function import_terms( $post_id, $terms ) {
+	private static function import_terms( $post_id, $post_type, $terms ) {
 		if ( ! is_array( $terms ) ) {
 			return;
 		}
 		foreach ( $terms as $taxonomy => $slugs ) {
 			$taxonomy_object = is_string( $taxonomy ) ? get_taxonomy( $taxonomy ) : null;
-			if ( ! $taxonomy_object || ! current_user_can( $taxonomy_object->cap->assign_terms ) || ! is_array( $slugs ) ) {
+			if ( ! $taxonomy_object || ! is_object_in_taxonomy( $post_type, $taxonomy ) || ! current_user_can( $taxonomy_object->cap->assign_terms ) || ! is_array( $slugs ) ) {
 				continue;
 			}
 			$term_ids = array();
