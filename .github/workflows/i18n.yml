@@ -63,6 +63,7 @@ jobs:
           commit-message: "chore(i18n): update POT"
           title: "Update POT for translations"
           body: "Automated POT regeneration via CI."
+          base: main
           branch: chore/update-pot
           add-paths: |
             languages/nr-post-exporter.pot
