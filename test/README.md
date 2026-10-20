@@ -1,7 +1,7 @@
 Test Environment for WP Post Exporter
 
 What this does
-- Spins up a minimal WordPress Multisite (subdirectory) on http://localhost:8080 with MariaDB.
+- Spins up a minimal WordPress 7.1 Multisite (subdirectory) on http://localhost:8080 with MariaDB.
 - Creates sites: test1 and test2.
 - Network-activates this plugin from the repo.
 - Seeds multilingual content + taxonomies on test1.
@@ -14,13 +14,15 @@ Requirements
 - Docker and Docker Compose plugin installed.
 
 Port configuration
-- Tests default to host port `8080`. If that port is taken, export `NRPEX_TEST_PORT=<available-port>` before running any scripts. All WordPress URLs and docker bindings will honor that value.
+- Tests default to host port `8080`. If that port is taken, export `NRPEX_TEST_PORT=<available-port>` before running any scripts. All WordPress URLs, image selection, and docker bindings will honor that value.
+- Set `NRPEX_WORDPRESS_IMAGE` to an official WordPress image when testing another supported version.
 
 Quick start
 1) Start and run the test end-to-end:
 - `bash test/bin/run.sh`
 
 2) Access the network (replace 8080 with your `NRPEX_TEST_PORT` if overridden):
+- Set `NRPEX_WORDPRESS_IMAGE` to an official WordPress image when testing another supported version.
    - WP Admin: `http://localhost:8080/wp-admin/` (admin / admin)
    - test1: `http://localhost:8080/test1/`
    - test2: `http://localhost:8080/test2/`

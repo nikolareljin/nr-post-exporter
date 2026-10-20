@@ -5,9 +5,9 @@
  * Description:       Export and import individual WordPress posts (with meta, terms, and revisions).
  * Author:            Nikola Reljin
  * Author URI:        https://profiles.wordpress.org/nikolareljin/
- * Version:           1.0.1
+ * Version:           1.1.0
  * Requires at least: 5.8
- * Tested up to:      6.9
+ * Tested up to:      7.1
  * Requires PHP:      7.4
  * License:           MIT
  * License URI:       https://opensource.org/licenses/MIT
@@ -75,6 +75,7 @@ add_action(
 				function () {
 					echo '<div class="wrap">';
 					echo '<h1>' . esc_html__( 'Import Post', 'nr-post-exporter' ) . '</h1>';
+					Import::import_notice();
 					echo '<p>' . esc_html__( 'Upload a previously exported JSON file to create a copy of that post (including meta, taxonomies, and revisions).', 'nr-post-exporter' ) . '</p>';
 					Import::import_post_button();
 					echo '</div>';

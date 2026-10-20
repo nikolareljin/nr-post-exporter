@@ -36,17 +36,15 @@ class Export {
 	public static function add_export_link() {
 		$post_types = get_post_types(
 			array(
-				'public' => true,
-			)
+				'public'  => true,
+				'show_ui' => true,
+			),
+			'names'
 		);
-
 		foreach ( $post_types as $post_type ) {
-			add_filter( 'post_row_actions', array( __CLASS__, 'add_export_link_to_post_row_actions' ), 10, 2 );
-			add_filter( 'page_row_actions', array( __CLASS__, 'add_export_link_to_post_row_actions' ), 10, 2 );
-
-			// Define custom action for post types.
-			add_action( 'admin_post_nrpexp_export', array( __CLASS__, 'export_post_link_action' ) );
+			add_filter( $post_type . '_row_actions', array( __CLASS__, 'add_export_link_to_post_row_actions' ), 10, 2 );
 		}
+		add_action( 'admin_post_nrpexp_export', array( __CLASS__, 'export_post_link_action' ) );
 	}
 
 	/**
@@ -57,7 +55,7 @@ class Export {
 	 * @return array
 	 */
 	public static function add_export_link_to_post_row_actions( $actions, $post ) {
-		if ( current_user_can( 'export' ) ) {
+		if ( current_user_can( 'export' ) && current_user_can( 'edit_post', $post->ID ) ) {
 			$actions['export'] = sprintf(
 				'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
 				esc_url( self::get_export_link( $post ) ),
@@ -120,7 +118,7 @@ class Export {
 			wp_die( esc_html__( 'Invalid request.', 'nr-post-exporter' ) );
 		}
 
-		if ( ! current_user_can( 'export' ) ) {
+		if ( ! current_user_can( 'export' ) || ! current_user_can( 'edit_post', $post_id ) ) {
 			wp_die( esc_html__( 'Insufficient permissions.', 'nr-post-exporter' ) );
 		}
 
@@ -135,12 +133,14 @@ class Export {
 		// Current date in format YYYY-mm-dd_HH-ii-ss.
 		$current_date = gmdate( 'Y-m-d--H-i-s' );
 
-		$filename = sprintf(
-			'%s-%s-%s.%s.json',
-			$post->post_type,
-			$post->ID,
-			$site_name,
-			$current_date
+		$filename = sanitize_file_name(
+			sprintf(
+				'%s-%s-%s.%s.json',
+				$post->post_type,
+				$post->ID,
+				$site_name,
+				$current_date
+			)
 		);
 
 		// Use WordPress helper to send JSON with proper headers and exit.

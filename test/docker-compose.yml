@@ -11,7 +11,7 @@ services:
       - db_data:/var/lib/mysql
 
   wordpress:
-    image: wordpress:latest
+    image: ${NRPEX_WORDPRESS_IMAGE:-wordpress:7.1-php8.4-apache}
     depends_on:
       - db
     restart: unless-stopped

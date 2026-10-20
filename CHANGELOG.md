@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-10-19
+### Changed
+- Added WordPress 7.1 compatibility coverage while retaining WordPress 5.8 and PHP 7.4 support.
+- Fixed uploaded JSON handling and restored Export row actions for custom public post types.
+- Hardened import and export permissions, upload validation, meta restoration, taxonomy assignment, and revision timestamp updates.
+- Added Composer and Foxguard security checks plus an explicit WordPress and PHP compatibility matrix.
+
 ## [1.0.1] - 2026-07-28
 ### Added
 - Project site under `docs/`, published with GitHub Pages: export and import walkthroughs, the JSON payload structure, install steps, requirements, and FAQ.

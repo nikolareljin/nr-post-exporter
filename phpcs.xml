@@ -4,6 +4,7 @@
 
     <!-- Files are provided via CLI path. -->
 
+    <exclude-pattern>.build/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
     <exclude-pattern>assets/*</exclude-pattern>
     <exclude-pattern>languages/*</exclude-pattern>
@@ -22,8 +23,8 @@
     <rule ref="WordPress-Extra"/>
 
     <!-- Target PHP and WordPress versions for compatibility checks. -->
-    <config name="testVersion" value="8.2-"/>
-    <config name="minimum_supported_wp_version" value="6.6"/>
+    <config name="testVersion" value="7.4-8.5"/>
+    <config name="minimum_supported_wp_version" value="5.8"/>
 
     <!-- Use the aggregate WordPress standard plus PHPCompatibility for WP. -->
     <rule ref="WordPress">

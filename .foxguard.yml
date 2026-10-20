@@ -1,0 +1,6 @@
+scan:
+  disable_rules: []
+secrets:
+  exclude_paths:
+    - test/tmp
+    - .build

@@ -8,8 +8,8 @@ compose="docker compose -f test/docker-compose.yml"
 info() { echo "[INFO] $*"; }
 err() { echo "[ERROR] $*" 1>&2; }
 
-ADMIN_USER=admin
-ADMIN_PASS=admin
+ADMIN_USER='admin'
+ADMIN_PASS='admin'
 ADMIN_EMAIL=admin@example.com
 HOST_PORT=${NRPEX_TEST_PORT:-8080}
 BASE_URL="http://localhost:${HOST_PORT}"
@@ -67,6 +67,22 @@ $compose run --rm wpcli sh -lc "wp --url='${SITE1_URL}' --user='${ADMIN_USER}' e
 info "Importing the JSON into test2…"
 IMPORTED_ID=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' --user='${ADMIN_USER}' eval-file /workspace/wpcli-import.php /workspace/tmp/export.json" < "${EXPORT_PATH_HOST}")
 info "Imported post ID: ${IMPORTED_ID}"
+
+info "Rejecting an internal post type…"
+printf '%s\n' '{"post_type":"revision","post_title":"Internal payload"}' > test/tmp/internal-post-type.json
+if $compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' --user='${ADMIN_USER}' eval-file /workspace/wpcli-import.php /workspace/tmp/internal-post-type.json" >/dev/null 2>&1; then
+  err "Internal post type import was accepted"
+  exit 1
+fi
+
+info "Normalizing an internal post status…"
+printf '%s\n' '{"post_type":"post","post_status":"trash","post_title":"Internal status"}' > test/tmp/internal-post-status.json
+STATUS_ID=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' --user='${ADMIN_USER}' eval-file /workspace/wpcli-import.php /workspace/tmp/internal-post-status.json")
+STATUS=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' post get ${STATUS_ID} --field=post_status")
+if [[ "draft" != "${STATUS}" ]]; then
+  err "Internal post status was not normalized to draft"
+  exit 1
+fi
 
 info "Verifying import…"
 TITLE=$($compose run --rm wpcli sh -lc "wp --url='${SITE2_URL}' post get ${IMPORTED_ID} --field=post_title")

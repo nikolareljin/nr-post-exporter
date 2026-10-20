@@ -1,4 +1,4 @@
-name: Plugin Check (Docker)
+name: WordPress compatibility
 
 on:
   pull_request:
@@ -6,26 +6,54 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  legacy-runtime:
+    uses: nikolareljin/ci-helpers/.github/workflows/wp-plugin-check.yml@production
+    with:
+      plugin_slug: nr-post-exporter
+      compose_file: ''
+      versions: >-
+        [{"wp":"5.8","php":"7.4"}]
+      meta_check_script: /var/www/html/wp-content/plugins/nr-post-exporter/test/wpcli-plugin-meta-check.php
+      exclude_directories: vendor,node_modules,.git,.github,docs,test,tests,__tests__,bin,.idea,.vscode
+      exclude_files: .gitignore,.gitattributes,.editorconfig,.distignore,.foxguard.yml,composer.lock,package.json,package-lock.json,phpcs.xml
+      fail_on_findings: false
+      upload_artifact: true
+      artifact_name: legacy-runtime-results
+
   plugin-check:
+    name: Plugin Check (WP ${{ matrix.wp }}, PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - wp: '6.9'
+            php: '8.2'
+          - wp: '7.0'
+            php: '8.3'
+          - wp: '7.1'
+            php: '8.4'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run Plugin Check in Docker
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Run packaged plugin check
+        env:
+          NRPEX_WORDPRESS_IMAGE: wordpress:${{ matrix.wp }}-php${{ matrix.php }}-apache
         run: bash test/bin/plugin-check.sh
-
-      - name: Upload check artifacts
-        uses: actions/upload-artifact@v4
+      - name: Verify Plugin Check result
+        run: grep -Fq 'No errors found.' test/tmp/plugin-check.json
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: plugin-check-results
+          name: plugin-check-wp${{ matrix.wp }}-php${{ matrix.php }}
           path: |
             test/tmp/plugin-check.json
             test/tmp/meta-check.json
           if-no-files-found: warn
-
       - name: Tear down Docker
         if: always()
         run: docker compose -f test/docker-compose.yml down -v
-
