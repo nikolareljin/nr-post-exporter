@@ -22,7 +22,6 @@ $headers = array(
     'Name'              => 'Plugin Name',
     'Version'           => 'Version',
     'RequiresAtLeast'   => 'Requires at least',
-    'TestedUpTo'        => 'Tested up to',
     'RequiresPHP'       => 'Requires PHP',
     'TextDomain'        => 'Text Domain',
     'DomainPath'        => 'Domain Path',
