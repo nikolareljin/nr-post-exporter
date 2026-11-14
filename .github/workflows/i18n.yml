@@ -24,8 +24,11 @@ jobs:
           chmod +x wp-cli.phar
           sudo mv wp-cli.phar /usr/local/bin/wp
 
+      # WP-CLI's bundled Composer rejects the token setup-php writes to the
+      # global auth.json ("contains invalid characters"). The package is
+      # public, so install it with an empty Composer home.
       - name: Install i18n command
-        run: wp package install wp-cli/i18n-command:*
+        run: COMPOSER_HOME="$RUNNER_TEMP/wp-composer" wp package install wp-cli/i18n-command
 
       - name: Generate POT file
         run: |
@@ -43,6 +46,8 @@ jobs:
 
   create-pot-pr:
     needs: make-pot
+    # A manual run on a branch checks the POT build without opening a PR.
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -55,7 +60,7 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: i18n-pot
-          path: .
+          path: languages
 
       - name: Create POT update PR
         uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c
