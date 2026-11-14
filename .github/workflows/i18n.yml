@@ -23,9 +23,9 @@ jobs:
           php wp-cli.phar --info
           chmod +x wp-cli.phar
           sudo mv wp-cli.phar /usr/local/bin/wp
-
-      - name: Install i18n command
-        run: wp package install wp-cli/i18n-command:*
+          # The phar bundles wp-cli/i18n-command; `wp package install` is not
+          # needed, and its Composer cannot use the Actions token.
+          wp i18n make-pot --help >/dev/null
 
       - name: Generate POT file
         run: |
@@ -43,6 +43,8 @@ jobs:
 
   create-pot-pr:
     needs: make-pot
+    # A manual run on a branch checks the POT build without opening a PR.
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -55,7 +57,7 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: i18n-pot
-          path: .
+          path: languages
 
       - name: Create POT update PR
         uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c
