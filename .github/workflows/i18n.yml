@@ -23,12 +23,9 @@ jobs:
           php wp-cli.phar --info
           chmod +x wp-cli.phar
           sudo mv wp-cli.phar /usr/local/bin/wp
-
-      # WP-CLI's bundled Composer rejects the token setup-php writes to the
-      # global auth.json ("contains invalid characters"). The package is
-      # public, so install it with an empty Composer home.
-      - name: Install i18n command
-        run: COMPOSER_HOME="$RUNNER_TEMP/wp-composer" wp package install wp-cli/i18n-command
+          # The phar bundles wp-cli/i18n-command; `wp package install` is not
+          # needed, and its Composer cannot use the Actions token.
+          wp i18n make-pot --help >/dev/null
 
       - name: Generate POT file
         run: |
